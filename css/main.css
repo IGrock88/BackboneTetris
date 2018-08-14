@@ -1,0 +1,86 @@
+body{
+    background-image: url("../img/background.png");
+}
+
+table {
+    background: #fff;
+    border: 3px solid lightblue;
+    margin: 10px auto;
+    border-collapse: collapse;
+    outline: 1px solid lightblue;
+    outline-offset: 5px;
+    box-shadow: 0 0 1px 4px lightblue;
+}
+
+
+.container{
+    margin: 0 auto;
+    width: 700px;
+    text-align: center;
+
+}
+
+.gameField{
+    background-image: url('../img/tetris-background-tetris-2005949861.jpg');
+    background-size: cover;
+
+}
+
+label{
+    color: white;
+}
+
+#info{
+    margin-top: 10px;
+    color: white;
+}
+
+.cell{
+    width: 25px;
+    height: 25px;
+    /*border: 1px dotted rgba(0, 0, 0, 0.2);*/
+}
+
+.I{
+    background-color: lightblue;
+}
+
+.O{
+    background-color: yellow;
+}
+
+.J{
+    background-color: blue;
+}
+
+.L{
+    background-color: orange;
+}
+
+.S{
+    background-color: green;
+}
+
+.T{
+    background-color: purple;
+}
+
+.Z{
+    background-color: red;
+}
+
+#message{
+    display: none;
+    background-color: lightgreen;
+}
+
+.figure{
+    box-shadow: inset 0px 0px 1px 2px;
+    border-radius: 5px;
+}
+
+#score{
+    margin: 10px auto;
+}
+
+
