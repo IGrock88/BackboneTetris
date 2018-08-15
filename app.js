@@ -1,5 +1,6 @@
 var FIELD_WIDTH = 10;
 var FIELD_HEIGHT = 20;
+var FIGURE_MOVE_INTERVAL = 300;
 
 var CENTRAL_FIGURE_INDEX = 1;
 
@@ -15,7 +16,7 @@ var FIGURES = [
 
 var FIGURE_LETTERS = function () { // собираем информацию по буквам фигур и сразу присваиваем в константу
     var letters = '';
-    for (var i = 0; i < FIGURES.length; i++){
+    for (var i = 0; i < FIGURES.length; i++) {
         letters += FIGURES[i].type + ' ';
     }
     return letters;
@@ -26,6 +27,14 @@ var KEY_CODE = {
     up: 38,
     right: 39,
     down: 40
+};
+
+var ACTIONS = {
+    left: 11,
+    top: 22,
+    right: 33,
+    bottom: 44,
+    rotate: 55
 };
 
 
@@ -42,6 +51,11 @@ $(function () {
     });
 
     var DroppedFigures = Backbone.Collection.extend({
+        initialize: function () {
+            this.bind('add', function () {
+                gameField.checkLines();
+            })
+        },
         model: FigureUnit
     });
 
@@ -62,9 +76,7 @@ $(function () {
             });
 
             for (let y = 0; y < FIELD_HEIGHT; y++) {
-                let row = $('<tr/>', {
-                    class: 'row'
-                });
+                let row = $('<tr/>');
                 for (let x = 0; x < FIELD_WIDTH; x++) {
                     row.append($('<td/>', {
                         class: 'cell',
@@ -77,7 +89,7 @@ $(function () {
                 $('<label for="score">Score </label><input type="number" id="score" value="0" readonly/>'),
                 '<h3 id="info">Управление стрелками &#8592 &#8593 &#8594 &#8595</h3>');
         },
-        startGame: function(){
+        startGame: function () {
             this.score = 0;
             if (this.moveFigureInterval != null) {
                 clearInterval(this.moveFigureInterval);
@@ -86,7 +98,7 @@ $(function () {
             this.respawnFigure();
             this.moveFigureInterval = setInterval(function () {
                 this.moveDown();
-            }.bind(this), 300);
+            }.bind(this), FIGURE_MOVE_INTERVAL);
         },
         respawnFigure: function () {
             console.log('respawn figure');
@@ -94,7 +106,7 @@ $(function () {
             var figureCoords = FIGURES[figureNumber].coords;
             var figureType = FIGURES[figureNumber].type;
             this.currentFigure = new Figure();
-            for (var i = 0; i < figureCoords.length; i++){
+            for (var i = 0; i < figureCoords.length; i++) {
                 var figureUnit = new FigureUnit({
                     coordX: figureCoords[i].x,
                     coordY: figureCoords[i].y,
@@ -104,102 +116,72 @@ $(function () {
             }
             return this.currentFigure;
         },
-        moveDown: function(){
-            var isDrop = false;
-            var newX = 0;
-            var newY = 0;
-            this.currentFigure.forEach(function (unit) {
-                newX = unit.get('coordX');
-                newY = unit.get('coordY') + 1;
-                if(this.checkBorder(newX, newY) || this.isFigure(newX, newY)){
-                    isDrop = true;
-                }
-            }.bind(this));
-            if (isDrop){
-                //clearInterval(this.moveFigureInterval);
-                this.addToDropped();
-                this.respawnFigure();
-                this.checkLines();
+        moveDown: function () {
+            var newCoordinates = this.getNewCoordinates(ACTIONS.bottom);
+            if (newCoordinates.length === this.currentFigure.length) {
+                this.setNewCoordinates(newCoordinates);
             }
             else {
-                this.currentFigure.forEach(function (unit) {
-                    newX = unit.get('coordX');
-                    newY = unit.get('coordY') + 1;
-                    unit.set({coordY: newY, coordX: newX});
-                });
+                this.addToDropped();
+                this.respawnFigure();
             }
         },
-        moveLeft: function(){
-            var isBarrier = false;
-            var newX = 0;
-            var newY = 0;
+        moveLeft: function () {
+            var newCoordinates = this.getNewCoordinates(ACTIONS.left);
+            if (newCoordinates.length === this.currentFigure.length) {
+                this.setNewCoordinates(newCoordinates);
+            }
+        },
+        moveRight: function () {
+            var newCoordinates = this.getNewCoordinates(ACTIONS.right);
+            if (newCoordinates.length === this.currentFigure.length) {
+                this.setNewCoordinates(newCoordinates);
+            }
+        },
+        getNewCoordinates: function (action) {
+            var newCoordinates = [];
             this.currentFigure.forEach(function (unit) {
-                newX = unit.get('coordX') - 1;
-                newY = unit.get('coordY');
-                if(this.checkBorder(newX, newY) || this.isFigure(newX, newY)){
-                    isBarrier = true;
+                var newX = unit.get('coordX');
+                var newY = unit.get('coordY');
+                if (action === ACTIONS.left) {
+                    newX--;
+                }
+                else if (action === ACTIONS.right) {
+                    newX++;
+                }
+                else if (action === ACTIONS.bottom) {
+                    newY++;
+                }
+                else if (action === ACTIONS.rotate) {
+                    var centralUnit = this.currentFigure.at(CENTRAL_FIGURE_INDEX);
+                    var centralX = centralUnit.get('coordX');
+                    var centralY = centralUnit.get('coordY');
+                    var tmpX = newX;
+                    newX = newY + centralX - centralY;
+                    newY = centralX + centralY - tmpX;
+                }
+                if (!(this.checkBorder(newX, newY) || this.isFigure(newX, newY))) {
+                    newCoordinates.push({coordX: newX, coordY: newY});
                 }
             }.bind(this));
-            if(!isBarrier){
-                this.currentFigure.forEach(function (unit) {
-                    var newX = unit.get('coordX') - 1;
-                    var newY = unit.get('coordY');
-                    unit.set({coordY: newY, coordX: newX});
-                });
-            }
+            return newCoordinates;
         },
-        moveRight: function(){
-            var isBarrier = false;
-            var newX = 0;
-            var newY = 0;
-            this.currentFigure.forEach(function (unit) {
-                newX = unit.get('coordX') + 1;
-                newY = unit.get('coordY');
-                if(this.checkBorder(newX, newY) || this.isFigure(newX, newY)){
-                    isBarrier = true;
-                }
-            }.bind(this));
-            if(!isBarrier){
-                this.currentFigure.forEach(function (unit) {
-                    var newX = unit.get('coordX') + 1;
-                    var newY = unit.get('coordY');
-                    unit.set({coordY: newY, coordX: newX});
-                });
-            }
+        setNewCoordinates: function (newCoordinates) {
+            this.currentFigure.forEach(function (unit, index) {
+                unit.set({coordY: newCoordinates[index].coordY, coordX: newCoordinates[index].coordX});
+            });
         },
-        rotateFigure: function(){
+        rotateFigure: function () {
             var centralUnit = this.currentFigure.at(CENTRAL_FIGURE_INDEX);
-            if (centralUnit.get('type') === 'O'){
+            if (centralUnit.get('type') === 'O') {
                 return;
             }
-            var centralX = centralUnit.get('coordX');
-            var centralY = centralUnit.get('coordY');
-            var isBarrier = false;
-
-            this.currentFigure.forEach(function (unit) {
-                var currentX = unit.get('coordX');
-                var currentY = unit.get('coordY');
-                var newX = currentY + centralX - centralY;
-                var newY = centralX + centralY - currentX;
-                if (this.checkBorder(newX, newY) || this.isFigure(newX, newY)){
-                    isBarrier = true;
-                }
-
-            }.bind(this));
-            if (!isBarrier){
-                this.currentFigure.forEach(function (unit) {
-                    var currentX = unit.get('coordX');
-                    var currentY = unit.get('coordY');
-                    var newX = currentY + centralX - centralY;
-                    var newY = centralX + centralY - currentX;
-                    unit.set({
-                        coordX: newX,
-                        coordY: newY
-                    })
-                })
+            var newCoordinates = this.getNewCoordinates(ACTIONS.rotate);
+            if (newCoordinates.length === this.currentFigure.length) {
+                this.setNewCoordinates(newCoordinates);
             }
         },
-        controlFigure: function(event){
+        controlFigure: function (event) {
             var key = event.keyCode;
             switch (key) {
                 case KEY_CODE.left: {
@@ -220,65 +202,61 @@ $(function () {
                 }
             }
         },
-        checkBorder: function(newX, newY){
+        checkBorder: function (newX, newY) {
             return newX < 0 || newX >= FIELD_WIDTH || newY < 0 || newY >= FIELD_HEIGHT;
         },
-        isFigure: function (newX, newY){
+        isFigure: function (newX, newY) {
             var isFigure = false;
             this.droppedFigures.forEach(function (droppedUnit) {
-                if(newX === droppedUnit.get('coordX') && newY === droppedUnit.get('coordY')){
+                if (newX === droppedUnit.get('coordX') && newY === droppedUnit.get('coordY')) {
                     isFigure = true;
                 }
             });
             return isFigure;
         },
-        checkLines: function(){
+        checkLines: function () {
             var countDeleteLines = 0;
             var numberDeleteLine = 0;
-            for (var y = FIELD_HEIGHT - 1; y >= 0; y--){
+            for (var y = FIELD_HEIGHT - 1; y >= 0; y--) {
 
                 var figureLine = this.droppedFigures.where({coordY: y});
-               if (figureLine.length === FIELD_WIDTH)  {
+                if (figureLine.length === FIELD_WIDTH) {
                     this.deleteLine(figureLine);
-                   countDeleteLines++;
-                   if (numberDeleteLine === 0){
-                       numberDeleteLine = y - 1;
-                   }
-               }
+                    countDeleteLines++;
+                    if (numberDeleteLine === 0) {
+                        numberDeleteLine = y - 1;
+                    }
+                }
 
             }
-            if (countDeleteLines !== 0){
+            if (countDeleteLines !== 0) {
                 console.log(numberDeleteLine);
                 console.log(countDeleteLines);
                 this.droppedFigures.forEach(function (unit) {
-                    if (unit.get('coordY') <= numberDeleteLine){
+                    if (unit.get('coordY') <= numberDeleteLine) {
                         unit.set({coordY: unit.get('coordY') + countDeleteLines});
                     }
                 })
             }
 
         },
-        addToDropped: function(){
+        addToDropped: function () {
             this.droppedFigures.add(this.currentFigure.models);
-            console.log(this.droppedFigures);
         },
-        deleteLine: function(models){
-            console.log(models);
+        deleteLine: function (models) {
             this.droppedFigures.remove(models);
-            this.score++;
-            $('#score').val(this.score);
+            $('#score').val(++this.score);
         },
-        stopGame: function(){
-            clearInterval(this.moveFigureInterval)   ;
+        stopGame: function () {
+            clearInterval(this.moveFigureInterval);
         },
         render: function () {
-
             $('.cell').removeClass(FIGURE_LETTERS + 'figure ');
             this.currentFigure.forEach(function (figureUnit) {
                 let el = $('[data-coord="' + figureUnit.get('coordX') + '-' + figureUnit.get('coordY') + '"]');
                 el.addClass(figureUnit.get('type') + ' figure');
             });
-            if (this.droppedFigures != null){
+            if (this.droppedFigures != null) {
                 this.droppedFigures.forEach(function (figureUnit) {
                     let el = $('[data-coord="' + figureUnit.get('coordX') + '-' + figureUnit.get('coordY') + '"]');
                     el.addClass(figureUnit.get('type') + ' figure');
