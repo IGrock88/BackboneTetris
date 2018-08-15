@@ -85,9 +85,22 @@ $(function () {
                 }
                 table.append(row);
             }
+
+            let tmpFigureTable = $('<table class="tmpFigure gameField"><caption>Следующая фигура</caption></table>');
+
+            for (let y = 0; y < 4; y++){
+                let row = $('<tr/>');
+                for (let x = 0; x < 4; x++){
+                    row.append($('<td/>', {
+                        class: 'tmpCell',
+                        'data-coord': x + '-' + y
+                    }));
+                }
+                tmpFigureTable.append(row);
+            }
             root.append($('<button id="start">Запуск игры</button>'), $('<button id="stop">Стоп игры</button>'), table,
                 $('<label for="score">Score </label><input type="number" id="score" value="0" readonly/>'),
-                '<h3 id="info">Управление стрелками &#8592 &#8593 &#8594 &#8595</h3>');
+                '<h3 id="info">Управление стрелками &#8592 &#8593 &#8594 &#8595</h3>', tmpFigureTable);
         },
         startGame: function () {
             this.score = 0;
@@ -230,8 +243,6 @@ $(function () {
 
             }
             if (countDeleteLines !== 0) {
-                console.log(numberDeleteLine);
-                console.log(countDeleteLines);
                 this.droppedFigures.forEach(function (unit) {
                     if (unit.get('coordY') <= numberDeleteLine) {
                         unit.set({coordY: unit.get('coordY') + countDeleteLines});
@@ -253,12 +264,12 @@ $(function () {
         render: function () {
             $('.cell').removeClass(FIGURE_LETTERS + 'figure ');
             this.currentFigure.forEach(function (figureUnit) {
-                let el = $('[data-coord="' + figureUnit.get('coordX') + '-' + figureUnit.get('coordY') + '"]');
+                let el = $('.cell[data-coord="' + figureUnit.get('coordX') + '-' + figureUnit.get('coordY') + '"]');
                 el.addClass(figureUnit.get('type') + ' figure');
             });
             if (this.droppedFigures != null) {
                 this.droppedFigures.forEach(function (figureUnit) {
-                    let el = $('[data-coord="' + figureUnit.get('coordX') + '-' + figureUnit.get('coordY') + '"]');
+                    let el = $('.cell[data-coord="' + figureUnit.get('coordX') + '-' + figureUnit.get('coordY') + '"]');
                     el.addClass(figureUnit.get('type') + ' figure');
                 });
             }

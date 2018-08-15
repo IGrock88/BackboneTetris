@@ -17,6 +17,7 @@ table {
     margin: 0 auto;
     width: 700px;
     text-align: center;
+    position: relative;
 
 }
 
@@ -24,6 +25,10 @@ table {
     background-image: url('../img/tetris-background-tetris-2005949861.jpg');
     background-size: cover;
 
+}
+
+.tmpFigure{
+    position: absolute;
 }
 
 label{
@@ -35,7 +40,7 @@ label{
     color: white;
 }
 
-.cell{
+.cell, .tmpCell{
     width: 25px;
     height: 25px;
     /*border: 1px dotted rgba(0, 0, 0, 0.2);*/
@@ -81,6 +86,11 @@ label{
 
 #score{
     margin: 10px auto;
+}
+
+caption{
+    color: white;
+    font-size: 12px;
 }
 
 
