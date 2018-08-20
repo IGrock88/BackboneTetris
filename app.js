@@ -1,10 +1,11 @@
 var FIELD_WIDTH = 10;
 var FIELD_HEIGHT = 20;
+var NEW_FIGURE_FIELD_SIZE = 4;
 var FIGURE_MOVE_INTERVAL = 300;
 
 var CENTRAL_FIGURE_INDEX = 1;
 
-var FIGURES = [
+var FIGURE_START_COORDS = [
     {type: 'O', coords: [{x: 4, y: 0}, {x: 5, y: 0}, {x: 4, y: 1}, {x: 5, y: 1}]},// квадрат
     {type: 'I', coords: [{x: 3, y: 0}, {x: 4, y: 0}, {x: 5, y: 0}, {x: 6, y: 0}]}, // длинная палка
     {type: 'L', coords: [{x: 4, y: 0}, {x: 5, y: 0}, {x: 6, y: 0}, {x: 4, y: 1}]}, // г влево
@@ -14,10 +15,20 @@ var FIGURES = [
     {type: 'T', coords: [{x: 4, y: 0}, {x: 5, y: 0}, {x: 6, y: 0}, {x: 5, y: 1}]}// t
 ];
 
+var FIGURE_TMP_COORDS = [
+    {type: 'O', coords: [{x: 1, y: 1}, {x: 1, y: 2}, {x: 2, y: 1}, {x: 2, y: 2}]},// квадрат
+    {type: 'I', coords: [{x: 0, y: 0}, {x: 1, y: 0}, {x: 2, y: 0}, {x: 3, y: 0}]}, // длинная палка
+    {type: 'L', coords: [{x: 0, y: 1}, {x: 1, y: 1}, {x: 2, y: 1}, {x: 0, y: 2}]}, // г влево
+    {type: 'J', coords: [{x: 0, y: 1}, {x: 1, y: 1}, {x: 2, y: 1}, {x: 2, y: 2}]},// г вправо
+    {type: 'Z', coords: [{x: 0, y: 1}, {x: 1, y: 1}, {x: 1, y: 2}, {x: 2, y: 2}]}, // крякозябра влево
+    {type: 'S', coords: [{x: 0, y: 2}, {x: 1, y: 2}, {x: 1, y: 1}, {x: 2, y: 1}]},// крякозябра вправо
+    {type: 'T', coords: [{x: 0, y: 1}, {x: 1, y: 1}, {x: 2, y: 1}, {x: 1, y: 2}]}// t
+];
+
 var FIGURE_LETTERS = function () { // собираем информацию по буквам фигур и сразу присваиваем в константу
     var letters = '';
-    for (var i = 0; i < FIGURES.length; i++) {
-        letters += FIGURES[i].type + ' ';
+    for (var i = 0; i < FIGURE_START_COORDS.length; i++) {
+        letters += FIGURE_START_COORDS[i].type + ' ';
     }
     return letters;
 }();
@@ -46,6 +57,15 @@ $(function () {
             this.bind('add remove change', function () {
                 gameField.render();
             });
+        },
+        model: FigureUnit
+    });
+
+    var TmpFigure = Backbone.Collection.extend({
+        initialize: function () {
+            this.bind('add remove change', function () {
+                tmpField.render();
+            })
         },
         model: FigureUnit
     });
@@ -86,21 +106,10 @@ $(function () {
                 table.append(row);
             }
 
-            let tmpFigureTable = $('<table class="tmpFigure gameField"><caption>Следующая фигура</caption></table>');
 
-            for (let y = 0; y < 4; y++){
-                let row = $('<tr/>');
-                for (let x = 0; x < 4; x++){
-                    row.append($('<td/>', {
-                        class: 'tmpCell',
-                        'data-coord': x + '-' + y
-                    }));
-                }
-                tmpFigureTable.append(row);
-            }
             root.append($('<button id="start">Запуск игры</button>'), $('<button id="stop">Стоп игры</button>'), table,
                 $('<label for="score">Score </label><input type="number" id="score" value="0" readonly/>'),
-                '<h3 id="info">Управление стрелками &#8592 &#8593 &#8594 &#8595</h3>', tmpFigureTable);
+                '<h3 id="info">Управление стрелками &#8592 &#8593 &#8594 &#8595</h3>');
         },
         startGame: function () {
             this.score = 0;
@@ -115,9 +124,16 @@ $(function () {
         },
         respawnFigure: function () {
             console.log('respawn figure');
-            var figureNumber = getRandomInt(0, FIGURES.length);
-            var figureCoords = FIGURES[figureNumber].coords;
-            var figureType = FIGURES[figureNumber].type;
+            var figureNumber;
+            if (tmpField.tmpFigure === null || typeof tmpField.tmpFigure === 'undefined'){
+                figureNumber = getRandomInt(0, FIGURE_START_COORDS.length);
+            }
+            else {
+                figureNumber = tmpField.figureNumber;
+            }
+
+            var figureCoords = FIGURE_START_COORDS[figureNumber].coords;
+            var figureType = FIGURE_START_COORDS[figureNumber].type;
             this.currentFigure = new Figure();
             for (var i = 0; i < figureCoords.length; i++) {
                 var figureUnit = new FigureUnit({
@@ -127,6 +143,8 @@ $(function () {
                 });
                 this.currentFigure.add(figureUnit);
             }
+            tmpField.respawnTmpFigure(figureNumber);
+
             return this.currentFigure;
         },
         moveDown: function () {
@@ -276,7 +294,57 @@ $(function () {
         }
     });
 
+    var TmpField = Backbone.View.extend({
+        initialize: function () {
+            this.figureNumber;
+            this.drawTmpField();
+
+        },
+        drawTmpField: function () {
+            let tmpFigureTable = $('<table class="tmpFigure gameField"><caption>Следующая фигура</caption></table>');
+
+            for (let y = 0; y < NEW_FIGURE_FIELD_SIZE; y++) {
+                let row = $('<tr/>');
+                for (let x = 0; x < NEW_FIGURE_FIELD_SIZE; x++) {
+                    row.append($('<td/>', {
+                        class: 'tmpCell',
+                        'data-coord': x + '-' + y
+                    }));
+                }
+                tmpFigureTable.append(row);
+            }
+            $('#root').append(tmpFigureTable);
+        },
+        respawnTmpFigure: function () {
+            console.log('respawn tmp figure');
+            var figureNumber = getRandomInt(0, FIGURE_START_COORDS.length);
+            var figureCoords = FIGURE_TMP_COORDS[figureNumber].coords;
+            var figureType = FIGURE_TMP_COORDS[figureNumber].type;
+            this.tmpFigure = new TmpFigure();
+            for (var i = 0; i < figureCoords.length; i++) {
+                var figureUnit = new FigureUnit({
+                    coordX: figureCoords[i].x,
+                    coordY: figureCoords[i].y,
+                    type: figureType
+                });
+                this.tmpFigure.add(figureUnit);
+            }
+            this.figureNumber = figureNumber;
+            return figureNumber;
+        },
+        render: function () {
+            console.log('tmp');
+            $('.tmpCell').removeClass(FIGURE_LETTERS + 'figure ');
+
+            this.tmpFigure.forEach(function (unit) {
+                let el = $('.tmpCell[data-coord="' + unit.get('coordX') + '-' + unit.get('coordY') + '"]');
+                el.addClass(unit.get('type') + ' figure');
+            });
+        }
+    });
+
     var gameField = new GameField({el: '#root'});
+    var tmpField = new TmpField({el: '#root'});
 
     function getRandomInt(min, max) {
         return Math.floor(Math.random() * (max - min)) + min;

@@ -29,6 +29,8 @@ table {
 
 .tmpFigure{
     position: absolute;
+    top: 22px;
+    left: 80px;
 }
 
 label{
@@ -91,6 +93,7 @@ label{
 caption{
     color: white;
     font-size: 12px;
+    padding-bottom: 10px;
 }
 
 
