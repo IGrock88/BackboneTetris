@@ -1,5 +1,13 @@
+@font-face{
+    font-family: 'Roboto Condensed';
+    src: url('../fonts/RobotoCondensed-Bold.ttf');
+}
+
 body{
     background-image: url("../img/background.png");
+    font-family: 'Roboto Condensed', sans-serif;
+    position: relative;
+    z-index: 2;
 }
 
 table {
@@ -22,8 +30,11 @@ table {
 }
 
 .gameField{
-    background-image: url('../img/tetris-background-tetris-2005949861.jpg');
+    background-image: url(../img/tetris-background-tetris-2005949861.jpg);
     background-size: cover;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
 
 }
 
@@ -96,4 +107,22 @@ caption{
     padding-bottom: 10px;
 }
 
+#gameOver{
+    position: absolute;
+    top: -200px;
+    left: 1%;
+    font-weight: 900;
+    font-size: 103px;
+    color: brown;
+    text-shadow: 2px 2px 4px black;
+    animation: moveGameOver 1s forwards;
+
+}
+
+@keyframes moveGameOver {
+    to{
+        text-shadow: 8px 8px 5px black;
+    }
+
+}
 

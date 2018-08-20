@@ -17,7 +17,7 @@ var FIGURE_START_COORDS = [
 
 var FIGURE_TMP_COORDS = [
     {type: 'O', coords: [{x: 1, y: 1}, {x: 1, y: 2}, {x: 2, y: 1}, {x: 2, y: 2}]},// квадрат
-    {type: 'I', coords: [{x: 0, y: 0}, {x: 1, y: 0}, {x: 2, y: 0}, {x: 3, y: 0}]}, // длинная палка
+    {type: 'I', coords: [{x: 0, y: 2}, {x: 1, y: 2}, {x: 2, y: 2}, {x: 3, y: 2}]}, // длинная палка
     {type: 'L', coords: [{x: 0, y: 1}, {x: 1, y: 1}, {x: 2, y: 1}, {x: 0, y: 2}]}, // г влево
     {type: 'J', coords: [{x: 0, y: 1}, {x: 1, y: 1}, {x: 2, y: 1}, {x: 2, y: 2}]},// г вправо
     {type: 'Z', coords: [{x: 0, y: 1}, {x: 1, y: 1}, {x: 1, y: 2}, {x: 2, y: 2}]}, // крякозябра влево
@@ -81,9 +81,9 @@ $(function () {
 
     var GameField = Backbone.View.extend({
         events: {
-            'click #start': 'startGame',
             'keydown': 'controlFigure',
-            'click #stop': 'stopGame'
+            'click #stop': 'stopGame',
+            'click #start': 'startGame'
         },
         initialize: function () {
             this.drawField();
@@ -106,26 +106,29 @@ $(function () {
                 table.append(row);
             }
 
+            table.append('<div id="gameOver">GAME<br> OVER</div>');
+
 
             root.append($('<button id="start">Запуск игры</button>'), $('<button id="stop">Стоп игры</button>'), table,
                 $('<label for="score">Score </label><input type="number" id="score" value="0" readonly/>'),
                 '<h3 id="info">Управление стрелками &#8592 &#8593 &#8594 &#8595</h3>');
         },
         startGame: function () {
+            $('#gameOver').css('top', '-200px').hide();
             this.score = 0;
             if (this.moveFigureInterval != null) {
-                clearInterval(this.moveFigureInterval);
+                return;
             }
             this.droppedFigures = new DroppedFigures();
             this.respawnFigure();
             this.moveFigureInterval = setInterval(function () {
                 this.moveDown();
             }.bind(this), FIGURE_MOVE_INTERVAL);
+
         },
         respawnFigure: function () {
-            console.log('respawn figure');
             var figureNumber;
-            if (tmpField.tmpFigure === null || typeof tmpField.tmpFigure === 'undefined'){
+            if (tmpField.tmpFigure === null || typeof tmpField.tmpFigure === 'undefined') {
                 figureNumber = getRandomInt(0, FIGURE_START_COORDS.length);
             }
             else {
@@ -136,6 +139,10 @@ $(function () {
             var figureType = FIGURE_START_COORDS[figureNumber].type;
             this.currentFigure = new Figure();
             for (var i = 0; i < figureCoords.length; i++) {
+                if (this.isFigure(figureCoords[i].x, figureCoords[i].y)) {
+                    this.stopGame();
+                    return;
+                }
                 var figureUnit = new FigureUnit({
                     coordX: figureCoords[i].x,
                     coordY: figureCoords[i].y,
@@ -278,6 +285,12 @@ $(function () {
         },
         stopGame: function () {
             clearInterval(this.moveFigureInterval);
+            this.moveFigureInterval = null;
+            this.currentFigure.reset();
+            $('#gameOver').show().animate({
+                top: '140px',
+                'text-shadow': '8px 8px 4px black;'
+            }, 1000);
         },
         render: function () {
             $('.cell').removeClass(FIGURE_LETTERS + 'figure ');
@@ -316,7 +329,6 @@ $(function () {
             $('#root').append(tmpFigureTable);
         },
         respawnTmpFigure: function () {
-            console.log('respawn tmp figure');
             var figureNumber = getRandomInt(0, FIGURE_START_COORDS.length);
             var figureCoords = FIGURE_TMP_COORDS[figureNumber].coords;
             var figureType = FIGURE_TMP_COORDS[figureNumber].type;
@@ -333,7 +345,6 @@ $(function () {
             return figureNumber;
         },
         render: function () {
-            console.log('tmp');
             $('.tmpCell').removeClass(FIGURE_LETTERS + 'figure ');
 
             this.tmpFigure.forEach(function (unit) {
@@ -349,4 +360,5 @@ $(function () {
     function getRandomInt(min, max) {
         return Math.floor(Math.random() * (max - min)) + min;
     }
+
 });
