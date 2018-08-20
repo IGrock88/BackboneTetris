@@ -2,6 +2,7 @@ var FIELD_WIDTH = 10;
 var FIELD_HEIGHT = 20;
 var NEW_FIGURE_FIELD_SIZE = 4;
 var FIGURE_MOVE_INTERVAL = 300;
+var SCORE_BY_LINE = 10;
 
 var CENTRAL_FIGURE_INDEX = 1;
 
@@ -115,7 +116,7 @@ $(function () {
         },
         startGame: function () {
             $('#gameOver').css('top', '-200px').hide();
-            this.score = 0;
+            this.score = 1000;
             if (this.moveFigureInterval != null) {
                 return;
             }
@@ -281,7 +282,7 @@ $(function () {
         },
         deleteLine: function (models) {
             this.droppedFigures.remove(models);
-            $('#score').val(++this.score);
+            $('#score').val(this.score + SCORE_BY_LINE);
         },
         stopGame: function () {
             clearInterval(this.moveFigureInterval);

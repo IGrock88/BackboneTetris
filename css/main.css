@@ -40,7 +40,7 @@ table {
 
 .tmpFigure{
     position: absolute;
-    top: 22px;
+    top: 34px;
     left: 80px;
 }
 
@@ -116,7 +116,7 @@ caption{
     color: brown;
     text-shadow: 2px 2px 4px black;
     animation: moveGameOver 1s forwards;
-
+    display: none;
 }
 
 @keyframes moveGameOver {
@@ -126,3 +126,24 @@ caption{
 
 }
 
+button{
+    border-radius: 5px;
+    margin: 10px 5px;
+    border: none;
+    background-color: white;
+    cursor: pointer;
+    padding: 10px;
+    transition: 200ms;
+}
+
+button:hover{
+    box-shadow: 0 3px 1px lightgray;
+    transform: scale(1.05);
+    transition: 200ms;
+}
+
+button:active{
+    box-shadow: none;
+    transform: scale(1);
+    transition: none;
+}
