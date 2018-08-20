@@ -116,7 +116,7 @@ $(function () {
         },
         startGame: function () {
             $('#gameOver').css('top', '-200px').hide();
-            this.score = 1000;
+            this.score = 0;
             if (this.moveFigureInterval != null) {
                 return;
             }
@@ -282,7 +282,8 @@ $(function () {
         },
         deleteLine: function (models) {
             this.droppedFigures.remove(models);
-            $('#score').val(this.score + SCORE_BY_LINE);
+            this.score += SCORE_BY_LINE;
+            $('#score').val(this.score);
         },
         stopGame: function () {
             clearInterval(this.moveFigureInterval);
