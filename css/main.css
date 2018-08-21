@@ -147,3 +147,15 @@ button:active{
     transform: scale(1);
     transition: none;
 }
+
+
+#speedMessage {
+    position: absolute;
+    top: 200px;
+    left: 0%;
+    font-weight: 900;
+    font-size: 58px;
+    color: blue;
+    text-shadow: 2px 2px 4px black;
+    display: none;
+}

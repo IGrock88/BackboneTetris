@@ -1,8 +1,12 @@
 var FIELD_WIDTH = 10;
 var FIELD_HEIGHT = 20;
 var NEW_FIGURE_FIELD_SIZE = 4;
-var FIGURE_MOVE_INTERVAL = 300;
+var FIGURE_MOVE_INTERVAL = 500;
 var SCORE_BY_LINE = 10;
+var INCREASE_SPEED_INTERVAL = 50;
+var STEP_INCREASE_SPEED = 100;
+var MIN_MOVE_INTERVAL = 100;
+var TIME_SHOW_SPEED_MESSAGE = 300;
 
 var CENTRAL_FIGURE_INDEX = 1;
 
@@ -108,7 +112,7 @@ $(function () {
             }
 
             table.append('<div id="gameOver">GAME<br> OVER</div>');
-
+            table.append('<div id="speedMessage">INCREASE SPEED</div>');
 
             root.append($('<button id="start">Запуск игры</button>'), $('<button id="stop">Стоп игры</button>'), table,
                 $('<label for="score">Score </label><input type="number" id="score" value="0" readonly/>'),
@@ -117,16 +121,20 @@ $(function () {
         startGame: function () {
             $('#gameOver').css('top', '-200px').hide();
             this.score = 0;
+            this.figureSpeed = FIGURE_MOVE_INTERVAL;
             $('#score').val(this.score);
             if (this.moveFigureInterval != null) {
                 return;
             }
             this.droppedFigures = new DroppedFigures();
             this.respawnFigure();
+            this.launchInterval();
+
+        },
+        launchInterval: function(){
             this.moveFigureInterval = setInterval(function () {
                 this.moveDown();
-            }.bind(this), FIGURE_MOVE_INTERVAL);
-
+            }.bind(this), this.figureSpeed);
         },
         respawnFigure: function () {
             var figureNumber;
@@ -262,19 +270,14 @@ $(function () {
                 var figureLine = this.droppedFigures.where({coordY: y});
                 if (figureLine.length === FIELD_WIDTH) {
                     this.deleteLine(figureLine);
-                    countDeleteLines++;
-                    if (numberDeleteLine === 0) {
-                        numberDeleteLine = y - 1;
-                    }
+                    var line = y;
+                    this.droppedFigures.forEach(function (unit) {
+                        if (unit.get('coordY') <= line) {
+                            unit.set({coordY: unit.get('coordY') + 1});
+                        }
+                    })
                 }
 
-            }
-            if (countDeleteLines !== 0) {
-                this.droppedFigures.forEach(function (unit) {
-                    if (unit.get('coordY') <= numberDeleteLine) {
-                        unit.set({coordY: unit.get('coordY') + countDeleteLines});
-                    }
-                })
             }
 
         },
@@ -283,8 +286,25 @@ $(function () {
         },
         deleteLine: function (models) {
             this.droppedFigures.remove(models);
+            this.increaseScore();
+            this.increaseSpeed();
+        },
+        increaseScore: function(){
             this.score += SCORE_BY_LINE;
             $('#score').val(this.score);
+        },
+        increaseSpeed: function(){
+            if(this.score % STEP_INCREASE_SPEED === 0 && this.figureSpeed > MIN_MOVE_INTERVAL){
+                this.figureSpeed -= INCREASE_SPEED_INTERVAL;
+                clearInterval(this.moveFigureInterval);
+                this.launchInterval();
+
+                var speedMessage = $('#speedMessage');
+                speedMessage.slideDown();
+                setTimeout(function () {
+                    speedMessage.slideUp();
+                }, TIME_SHOW_SPEED_MESSAGE);
+            }
         },
         stopGame: function () {
             clearInterval(this.moveFigureInterval);
