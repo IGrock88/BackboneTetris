@@ -117,6 +117,7 @@ $(function () {
         startGame: function () {
             $('#gameOver').css('top', '-200px').hide();
             this.score = 0;
+            $('#score').val(this.score);
             if (this.moveFigureInterval != null) {
                 return;
             }
