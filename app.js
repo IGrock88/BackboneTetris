@@ -277,9 +277,7 @@ $(function () {
                         }
                     })
                 }
-
             }
-
         },
         addToDropped: function () {
             this.droppedFigures.add(this.currentFigure.models);
@@ -309,14 +307,17 @@ $(function () {
         checkEndGame: function (coordX, coordY){
             return this.isFigure(coordX, coordY);
         },
-        stopGame: function () {
-            clearInterval(this.moveFigureInterval);
-            this.moveFigureInterval = null;
-            this.currentFigure.reset();
+        showGameOverAnimation: function(){
             $('#gameOver').show().animate({
                 top: '140px',
                 'text-shadow': '8px 8px 4px black;'
             }, 1000);
+        },
+        stopGame: function () {
+            clearInterval(this.moveFigureInterval);
+            this.moveFigureInterval = null;
+            this.currentFigure.reset();
+            this.showGameOverAnimation();
         },
         render: function () {
             $('.cell').removeClass(FIGURE_LETTERS + 'figure ');
