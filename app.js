@@ -149,7 +149,7 @@ $(function () {
             var figureType = FIGURE_START_COORDS[figureNumber].type;
             this.currentFigure = new Figure();
             for (var i = 0; i < figureCoords.length; i++) {
-                if (this.isFigure(figureCoords[i].x, figureCoords[i].y)) {
+                if (this.checkEndGame(figureCoords[i].x, figureCoords[i].y)) {
                     this.stopGame();
                     return;
                 }
@@ -305,6 +305,9 @@ $(function () {
                     speedMessage.slideUp();
                 }, TIME_SHOW_SPEED_MESSAGE);
             }
+        },
+        checkEndGame: function (coordX, coordY){
+            return this.isFigure(coordX, coordY);
         },
         stopGame: function () {
             clearInterval(this.moveFigureInterval);
