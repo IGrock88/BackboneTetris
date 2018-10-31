@@ -1,0 +1,23 @@
+{
+  "name": "backbonetetris",
+  "version": "1.0.0",
+  "description": "tetris on backbone",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IGrock88/BackboneTetris.git"
+  },
+  "keywords": [
+    "tetris",
+    "game"
+  ],
+  "author": "IGrock88",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/IGrock88/BackboneTetris/issues"
+  },
+  "homepage": "https://github.com/IGrock88/BackboneTetris#readme"
+}
